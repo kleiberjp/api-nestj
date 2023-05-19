@@ -6,7 +6,10 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "prebuild": "run-s clean prisma:generate",
     "build": "nest build",
+    "build:prod": "run-s prebuild build",
+    "clean": "rimraf dist",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -27,7 +30,9 @@
     "@prisma/client": "4.14.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "npm-run-all": "^4.1.5",
     "reflect-metadata": "^0.1.13",
+    "rimraf": "^5.0.1",
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^4.6.3"
   },
