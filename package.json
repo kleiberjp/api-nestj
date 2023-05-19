@@ -7,8 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "prebuild": "run-s clean prisma:generate",
-    "build": "nest build",
-    "build:prod": "run-s prebuild build",
+    "build": "run-s prisma:generate nest build",
     "clean": "rimraf dist",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
