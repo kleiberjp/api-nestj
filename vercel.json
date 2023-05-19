@@ -1,9 +1,5 @@
 {
     "version": 2,
-    "buildCommand": "pnpm build:prod",
-    "installCommand": "pnpm install",
-    "devCommand": "pnpm start",
-    "outputDirectory": "dist",
     "builds": [
       {
         "src": "src/main.ts",
