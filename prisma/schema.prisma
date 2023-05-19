@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator nestjsDto {
+  provider                        = "prisma-generator-nestjs-dto"
+  output                          = "../src/models"
+  outputToNestJsResourceStructure = "true"
+  exportRelationModifierClasses   = "false"
+  fileNamingStyle                 = "kebab"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum LoanStatus {
+  NOT_INITIATED
+  STARTED
+  IN_PROGRESS
+  DOCUMENTATION_PEDING
+  ACCEPTED
+  IN_PAYMENT
+  FULLFILLED
+}
+
+model User {
+  id            String            @id @default(uuid())
+  firstName     String            @db.VarChar(255)
+  lastName      String            @db.VarChar(500)
+  phoneNumber   String            @db.VarChar(100)
+  email         String            @unique @db.VarChar(255)
+  
+  /// @DtoRelationCanCreateOnCreate
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoRelationCanCreateOnUpdate
+  /// @DtoRelationCanConnectOnUpdate
+  loanProcess   MortgageProcess[]  
+  
+  verified      Boolean           @default(false)
+  enabled       Boolean           @default(true)
+  roles         Role[]            @default([USER]) 
+  
+  /// @DtoReadOnly
+  createdAt     DateTime?         @default(now()) @db.Timestamptz(3)
+  createdBy     String?           @db.VarChar(255)
+  updatedAt     DateTime?         @default(now()) @updatedAt @db.Timestamptz(3)
+  updatedBy     String?           @db.VarChar(255)
+
+  @@index([id, email])
+}
+
+model MortgageSetup {
+  id              String      @id @default(uuid())
+  country         String      @db.VarChar(255)
+  yearsTerms      Int[]
+  interestRate    Float       @db.DoublePrecision
+  formulaInterest String      @db.VarChar(255)
+  
+  /// @DtoReadOnly
+  properties      Property[]
+  
+  /// @DtoReadOnly
+  createdAt       DateTime?   @default(now()) @db.Timestamptz(3)
+  
+  createdBy       String?     @db.VarChar(255)
+  updatedAt       DateTime?   @default(now()) @updatedAt @db.Timestamptz(3)
+  updatedBy       String?     @db.VarChar(255)
+
+  @@index([id, country])  
+}
+
+model Property {
+  id              String        @id @default(uuid())
+  address         String?       @db.VarChar(500)
+  cost            Decimal       @db.Money
+  term            Int
+
+  /// @DtoRelationRequired
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoRelationCanConnectOnUpdate
+  mortageType     MortgageSetup?  @relation(fields: [mortageTypeId], references: [id])
+  mortageTypeId   String?        
+  
+  /// @DtoRelationCanCreateOnUpdate
+  /// @DtoRelationCanConnectOnUpdate
+  loanProcess     MortgageProcess?
+
+  @@index([id, mortageTypeId])
+}
+
+model MortgageProcess {
+  id            String      @id @default(uuid())
+  
+  /// @DtoRelationRequired
+  /// @DtoRelationCanCreateOnCreate
+  /// @DtoRelationCanConnectOnCreate
+   /// @DtoRelationCanCreateOnUpdate
+  mortgagee     User        @relation(fields: [mortgageeId], references: [id])
+  mortgageeId   String
+  
+  /// @DtoRelationRequired
+  /// @DtoRelationCanCreateOnCreate
+  /// @DtoRelationCanConnectOnCreate
+   /// @DtoRelationCanCreateOnUpdate
+  property      Property    @relation(fields: [propertyId], references: [id])
+  propertyId    String      @unique
+  
+  status        LoanStatus  @default(NOT_INITIATED)
+  
+  // @DtoReadOnly
+  createdAt     DateTime?   @default(now()) @db.Timestamptz(3)
+  createdBy     String?     @db.VarChar(255)
+  updatedAt     DateTime?   @default(now()) @updatedAt @db.Timestamptz(3)
+  updatedBy     String?     @db.VarChar(255) 
+
+  @@index([mortgageeId, propertyId]) 
+}
